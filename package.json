@@ -1,0 +1,26 @@
+{
+  "name": "vercel-stats",
+  "version": "1.0.0",
+  "description": "Returns some stats about my Vercel deployments",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitlimes/vercel-stats.git"
+  },
+  "author": "gitlimes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gitlimes/vercel-stats/issues"
+  },
+  "homepage": "https://github.com/gitlimes/vercel-stats#readme",
+  "dependencies": {
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+    "puppeteer": "^20.6.0",
+    "puppeteer-core": "^20.6.0"
+  }
+}
