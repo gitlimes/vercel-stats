@@ -1,9 +1,11 @@
-const puppeteer = require("puppeteer")
-require('dotenv').config()
+import puppeteer from "puppeteer"
+import 'dotenv/config'
 
-const express = require("express")
-const app = express()
+import express from 'express';
+const app = express();
 const port = 2251
+
+import getMDBadgeStats from "./funcs/getMDBadgeStats.js"
 
 puppeteer.launch({ headless: "new" }).then(async browser => {
     console.log("launched hehe")
@@ -16,43 +18,39 @@ puppeteer.launch({ headless: "new" }).then(async browser => {
         res.send('Returns some stats about my Vercel deployments!\n\nSource code at: https://github.com/gitlimes/vercel-stats')
     })
 
-    app.get('/mdbadge', async (req, res) => {
-        const dateNow = new Date().toISOString()
-        const dateOneYearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString()
-        const statsUrl = `https://vercel.com/api/v4/usage/top?projectId=prj_rk43KkLaPqpSgCbM7t5gZqW1iuoW&from=${encodeURIComponent(dateOneYearAgo)}&to=${encodeURIComponent(dateNow)}&limit=50&sortKey=requests&pathType=target_path`
-    
-        await page.goto(statsUrl);
-    
-        rawStats = await page.evaluate(() => {
-            return JSON.parse(document.querySelector("body").innerText).data;
-        });
+    let mdbadgeCache = {}
 
-        const funcStats = rawStats.filter(item => {
-            return item.type === "func"
-        })
-        const userStats = funcStats.filter(item => {
-            return (item.target_path === "/api/shield/[user]") || (item.target_path === "/api/json/[user]")
-        })
-        const serverStats = funcStats.filter(item => {
-            return (item.target_path === "/api/server/[invite]")
-        })
+    let reqSinceCrash = 0;
 
-        const totalStats = {
-            user: 0,
-            server: 0,
-            total: 0,
-            sourceCode: "https://github.com/gitlimes/vercel-stats"
+    let fetching = false;
+
+    app.get('/mdbadge', async (_req, res) => {
+        if (
+            (!mdbadgeCache.cached || (Math.floor(Date.now() / 1000) - mdbadgeCache.cachedOn) > 900)
+            &&
+            !fetching
+        ) {
+            fetching = true;
+            console.log(`[info] [${new Date().toLocaleTimeString()}] fetching updated data (req since crash: ${reqSinceCrash})`)
+
+            const totalStats = await getMDBadgeStats(page);
+
+            if (!totalStats) {
+                return res.json(mdbadgeCache)
+            }
+
+            mdbadgeCache = { ...totalStats };
+            mdbadgeCache.cached = true;
+            mdbadgeCache.cachedOn = Math.floor(Date.now() / 1000)
+
+            res.json(totalStats)
+            fetching = false
+        } else {
+            console.log(`[info] [${new Date().toLocaleTimeString()}] serving cached data (req since crash: ${reqSinceCrash})`)
+            res.json(mdbadgeCache)
         }
 
-        userStats.forEach(item => {
-            totalStats.user += item.requests
-        })
-        serverStats.forEach(item => {
-            totalStats.server += item.requests
-        })
-        totalStats.total = totalStats.user + totalStats.server
-
-        res.json(totalStats)
+        reqSinceCrash++;
     })
 
     app.listen(port, () => {
