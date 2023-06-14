@@ -2,10 +2,19 @@ import puppeteer from "puppeteer"
 import 'dotenv/config'
 
 import express from 'express';
-const app = express();
-const port = 2251
+import favicon from "serve-favicon";
+import path from "path";
+
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import getMDBadgeStats from "./funcs/getMDBadgeStats.js"
+
+const app = express();
+const port = 2251;
+
+app.use(favicon(path.join(__dirname, 'assets', 'favicon.ico')));
 
 puppeteer.launch({ headless: "new" }).then(async browser => {
     console.log("launched hehe")
@@ -18,7 +27,7 @@ puppeteer.launch({ headless: "new" }).then(async browser => {
         res.send('Returns some stats about my Vercel deployments!\n\nSource code at: https://github.com/gitlimes/vercel-stats')
     })
 
-    let mdbadgeCache = {}
+    let mdbadgeCache = {};
 
     let reqSinceCrash = 0;
 
@@ -54,7 +63,7 @@ puppeteer.launch({ headless: "new" }).then(async browser => {
     })
 
     app.listen(port, () => {
-        console.log(`Server listening on port ${port}`)
+        console.log(`Server listening at http://localhost:${port}/`)
     })
 
 })
