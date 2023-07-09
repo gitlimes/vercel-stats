@@ -9,7 +9,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-import getMDBadgeStats from "./funcs/getMDBadgeStats.js"
+import getDCBadgeStats from "./funcs/getDCBadgeStats.js"
 
 const app = express();
 const port = 2251;
@@ -27,36 +27,36 @@ puppeteer.launch({ headless: "new", args: ['--no-sandbox'] }).then(async browser
         res.send('Returns some stats about my Vercel deployments!\n\nSource code at: https://github.com/gitlimes/vercel-stats')
     })
 
-    let mdbadgeCache = {};
+    let dcbadgeCache = {};
 
     let reqSinceCrash = 0;
 
     let fetching = false;
 
-    app.get('/mdbadge', async (_req, res) => {
+    app.get('/dcbadge', async (_req, res) => {
         if (
-            (!mdbadgeCache.cached || (Math.floor(Date.now() / 1000) - mdbadgeCache.cachedOn) > 900)
+            (!dcbadgeCache.cached || (Math.floor(Date.now() / 1000) - dcbadgeCache.cachedOn) > 900)
             &&
             !fetching
         ) {
             fetching = true;
             console.log(`[info] [${new Date().toLocaleTimeString()}] fetching updated data (req since crash: ${reqSinceCrash})`)
 
-            const totalStats = await getMDBadgeStats(page);
+            const totalStats = await getDCBadgeStats(page);
 
             if (!totalStats) {
-                return res.json(mdbadgeCache)
+                return res.json(dcbadgeCache)
             }
 
-            mdbadgeCache = { ...totalStats };
-            mdbadgeCache.cached = true;
-            mdbadgeCache.cachedOn = Math.floor(Date.now() / 1000)
+            dcbadgeCache = { ...totalStats };
+            dcbadgeCache.cached = true;
+            dcbadgeCache.cachedOn = Math.floor(Date.now() / 1000)
 
             res.json(totalStats)
             fetching = false
         } else {
             console.log(`[info] [${new Date().toLocaleTimeString()}] serving cached data (req since crash: ${reqSinceCrash})`)
-            res.json(mdbadgeCache)
+            res.json(dcbadgeCache)
         }
 
         reqSinceCrash++;
@@ -67,4 +67,3 @@ puppeteer.launch({ headless: "new", args: ['--no-sandbox'] }).then(async browser
     })
 
 })
-
