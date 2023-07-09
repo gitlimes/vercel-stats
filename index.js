@@ -16,7 +16,7 @@ const port = 2251;
 
 app.use(favicon(path.join(__dirname, 'assets', 'favicon.ico')));
 
-puppeteer.launch({ headless: "new" }).then(async browser => {
+puppeteer.launch({ headless: "new", args: ['--no-sandbox'] }).then(async browser => {
     console.log("launched hehe")
     const page = await browser.newPage();
 
